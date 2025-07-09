@@ -34,6 +34,11 @@ def guardar_grafico_pred_vs_real(y_true, y_pred, modelo_nombre, filename):
     plt.close()
 
 def generar_pdf_resultados(mae_vals, mse_vals, r2_vals, modelos, mejor_modelo, tiempos_entrenamiento):
+    import matplotlib.pyplot as plt
+    from fpdf import FPDF
+    import os
+
+    # --------- Gráfico comparativo de métricas ---------
     fig, axs = plt.subplots(1, 3, figsize=(16, 4))
     axs[0].bar(modelos, mae_vals, color='skyblue'); axs[0].set_title("MAE")
     axs[1].bar(modelos, mse_vals, color='lightgreen'); axs[1].set_title("MSE")
@@ -46,19 +51,82 @@ def generar_pdf_resultados(mae_vals, mse_vals, r2_vals, modelos, mejor_modelo, t
     pdf_path = "reporte/reporte_comparativo.pdf"
     pdf = FPDF()
     pdf.add_page()
+
+    # Portada
     pdf.set_font("Arial", "B", 16)
     pdf.cell(0, 10, limpiar_texto("Informe Comparativo de Modelos de Predicción"), ln=1, align="C")
     pdf.ln(10)
 
+    # 1. Introducción
     pdf.set_font("Arial", "", 12)
     pdf.multi_cell(0, 8, limpiar_texto(
-        "Se compararon tres modelos entrenados para predecir el tiempo de producción de productos. "
-        "Las métricas evaluadas fueron: MAE, MSE, R² y el tiempo de entrenamiento de cada modelo. "
-        "El mejor modelo se seleccionó considerando un MAE bajo y un R² alto.\n\n"
-        f"Modelo recomendado: {mejor_modelo}"
+        "Este informe documenta el análisis exploratorio, preprocesamiento, entrenamiento y evaluación de modelos "
+        "para la predicción del tiempo de producción. Se muestran visualizaciones EDA, estadísticas descriptivas y "
+        "la comparación de tres modelos de machine learning."
     ))
     pdf.ln(8)
 
+    # 2. EDA - Visualizaciones
+    pdf.set_font("Arial", "B", 13)
+    pdf.cell(0, 10, "Exploración de Datos (EDA)", ln=1)
+    pdf.set_font("Arial", "", 11)
+    pdf.cell(0, 8, "Distribución de la variable objetivo:", ln=1)
+    pdf.image("img/eda_hist_production_time.png", x=10, w=180)
+    pdf.ln(3)
+    pdf.cell(0, 8, "Boxplot por tipo de producto:", ln=1)
+    pdf.image("img/eda_boxplot_tipo_producto.png", x=10, w=180)
+    pdf.ln(3)
+    pdf.cell(0, 8, "Matriz de correlación:", ln=1)
+    pdf.image("img/eda_heatmap_corr.png", x=10, w=180)
+    pdf.ln(3)
+    pdf.cell(0, 8, "Relación unidades producidas vs tiempo:", ln=1)
+    pdf.image("img/eda_scatter_units_vs_time.png", x=10, w=180)
+    pdf.ln(8)
+
+    # 3. Preprocesamiento
+    pdf.set_font("Arial", "B", 13)
+    pdf.cell(0, 10, "Preprocesamiento de Datos", ln=1)
+    pdf.set_font("Arial", "", 11)
+    pdf.multi_cell(0, 8, limpiar_texto(
+        "- Conversión de fechas\n"
+        "- Eliminación de columnas irrelevantes\n"
+        "- Imputación/eliminación de nulos\n"
+        "- Eliminación de outliers\n"
+        "- Codificación de variables categóricas\n"
+        "- Normalización de variables numéricas\n"
+        "- División en entrenamiento y prueba"
+    ))
+    pdf.ln(8)
+
+    # 4. Comparativa de Modelos: Gráficos antes de la tabla
+    pdf.set_font("Arial", "B", 13)
+    pdf.cell(0, 10, "Comparación de Modelos", ln=1)
+    pdf.set_font("Arial", "", 11)
+    pdf.multi_cell(0, 8, limpiar_texto(
+        "Se entrenaron los modelos: ANN, Random Forest y XGBoost. "
+        "Las métricas evaluadas fueron: MAE, MSE, R² y tiempo de entrenamiento."
+    ))
+    pdf.ln(5)
+
+    # Gráfico comparativo de métricas
+    try:
+        pdf.image(grafico_path, x=10, w=180)
+        pdf.ln(5)
+    except:
+        pdf.cell(0, 10, "Error al cargar el gráfico comparativo.", ln=1)
+
+    # Gráficos Predicción vs Real
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(0, 10, "Gráficos Predicción vs Real:", ln=1)
+    for i, modelo in enumerate(modelos):
+        img_path = f"img/pred_vs_real_{i}.png"
+        if os.path.exists(img_path):
+            pdf.cell(0, 8, f"{modelo}:", ln=1)
+            pdf.image(img_path, x=10, w=180)
+            pdf.ln(3)
+    pdf.ln(5)
+
+    # Tabla de resultados
     pdf.set_font("Arial", "B", 12)
     pdf.cell(45, 8, "Modelo", 1, align="C")
     pdf.cell(30, 8, "MAE", 1, align="C")
@@ -66,7 +134,6 @@ def generar_pdf_resultados(mae_vals, mse_vals, r2_vals, modelos, mejor_modelo, t
     pdf.cell(30, 8, "R² Score", 1, align="C")
     pdf.cell(55, 8, "Tiempo Entrenamiento (s)", 1, align="C")
     pdf.ln()
-
     pdf.set_font("Arial", "", 12)
     for i, modelo in enumerate(modelos):
         pdf.cell(45, 8, modelo, 1)
@@ -77,21 +144,16 @@ def generar_pdf_resultados(mae_vals, mse_vals, r2_vals, modelos, mejor_modelo, t
         pdf.cell(55, 8, f"{tiempo:.2f}" if isinstance(tiempo, (float, int)) else str(tiempo), 1, align="C")
         pdf.ln()
 
-    pdf.ln(5)
-    try:
-        pdf.image(grafico_path, x=10, w=180)
-        pdf.ln(5)
-        pdf.set_font("Arial", "B", 12)
-        pdf.cell(0, 10, "Gráficos Predicción vs Real:", ln=1)
+    pdf.ln(10)
+    # 5. Conclusión
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(0, 10, "Conclusión:", ln=1)
+    pdf.set_font("Arial", "", 11)
+    pdf.multi_cell(0, 8, limpiar_texto(
+        f"El modelo recomendado es: {mejor_modelo}, por su mejor desempeño en las métricas evaluadas."
+    ))
 
-        for i, modelo in enumerate(modelos):
-            img_path = f"img/pred_vs_real_{i}.png"
-            if os.path.exists(img_path):
-                pdf.image(img_path, x=10, w=180)
-                os.remove(img_path)
-    except:
-        pdf.cell(0, 10, "Error al cargar los gráficos.", ln=1)
-
+    # Pie de página
     pdf.set_y(-20)
     pdf.set_font("Arial", "I", 8)
     pdf.cell(0, 10, limpiar_texto("Generado por Maykol Ramos- Rodrigez Leon  - UNT - Tesis 2025"), 0, 0, 'C')
