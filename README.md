@@ -155,8 +155,11 @@ proyecto/
 │   ├── scaler.pkl
 │   ├── X_test.npy
 │   └── y_test.npy
+├── img
+├── reporte
 ├── app.py
 ├── requirements.txt
+├── train_models.ipynb
 └── README.md
 ```
 
