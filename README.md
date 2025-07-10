@@ -70,3 +70,98 @@ La segunda parte consiste en el desarrollo de una aplicación web interactiva ut
 
 ```bash
 pip install streamlit pandas numpy joblib tensorflow xgboost scikit-learn matplotlib seaborn statsmodels scipy fpdf
+# Proyecto de Predicción de Tiempo de Producción
+
+## 📆 Ejecución
+3. Ejecuta la aplicación con:
+
+```bash
+streamlit run app.py
+```
+
+---
+
+## 📊 Resultados
+
+### Comparación de Modelos
+
+| Modelo        | MAE   | MSE    | R²     | U de Theil | Tiempo (s) |
+| ------------- | ----- | ------ | ------ | ---------- | ---------- |
+| ANN           | 5.625 | 44.995 | -0.052 | 0.2601     | 13.95      |
+| Random Forest | 5.561 | 43.346 | -0.013 | 0.2496     | 2.14       |
+| XGBoost       | 5.761 | 47.924 | -0.120 | 0.2610     | 0.20       |
+
+### Prueba de Diebold-Mariano
+
+| Comparación              | Estadística | p-valor |
+| ------------------------ | ----------- | ------- |
+| ANN vs Random Forest     | -1.4407     | 0.1505  |
+| ANN vs XGBoost           | 1.7200      | 0.0862  |
+| Random Forest vs XGBoost | 3.6825      | 0.0003  |
+
+---
+
+## 📄 Reportes Generados
+
+### 1. Reporte Comparativo de Modelos
+
+Documenta el análisis y evaluación detallada de los tres modelos predictivos, incluyendo:
+
+* Visualizaciones exploratorias (EDA)
+* Preprocesamiento de datos
+* Comparación de métricas (MAE, MSE, R², Tiempo de entrenamiento)
+* Análisis del Coeficiente U de Theil
+* Resultados de las pruebas de Diebold-Mariano
+
+### 2. Reporte de Predicción Individual
+
+Se genera cuando el usuario ingresa los datos de un nuevo producto en la interfaz de Streamlit. Muestra la predicción del tiempo de producción utilizando el modelo seleccionado.
+
+---
+
+## 🏆 Conclusión
+
+Según las métricas evaluadas y los resultados de la prueba de Diebold-Mariano, el modelo recomendado es **Random Forest**. Este modelo mostró el mejor rendimiento general, reflejado en sus valores de R², menor MAE/MSE y consistencia en las pruebas estadísticas.
+
+---
+
+## 📋 Notas Importantes
+
+* **Dataset**: Debes descargar manualmente el dataset desde [Kaggle](https://www.kaggle.com/) y subirlo a tu Google Drive antes de iniciar el pipeline en Colab.
+* **Separación de fases:**
+
+  * *Colab:* EDA, preprocesamiento y entrenamiento de modelos.
+  * *Streamlit:* Evaluación, comparación estadística, visualizaciones y predicción interactiva.
+* **Reproducibilidad**: El código de Colab está documentado paso a paso para facilitar la reproducción del entrenamiento de modelos.
+
+---
+
+## 👨‍💼 Autor
+
+**Maykol Ramos - Rodriguez Leon**
+Universidad Nacional de Trujillo (UNT) - Tesis 2025
+
+---
+
+## 📂 Estructura de Archivos
+
+```
+proyecto/
+├── datos/
+│   ├── modelos/
+│   │   ├── ann_model.h5
+│   │   ├── random_forest_model.pkl
+│   │   └── xgboost_model.pkl
+│   ├── scaler.pkl
+│   ├── X_test.npy
+│   └── y_test.npy
+├── app.py
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## 🔗 Enlaces
+
+* Dataset en Kaggle: [https://www.kaggle.com/datasets/skywalkerrr/machines-productivity](https://www.kaggle.com/datasets/skywalkerrr/machines-productivity)
