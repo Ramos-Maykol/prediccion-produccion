@@ -351,10 +351,10 @@ st.title("📈 Análisis Comparativo y Predicción de Tiempo de Producción")
 # ------------------------- CARGA DE MODELOS Y SCALER -------------------------
 @st.cache_resource
 def cargar_modelos():
-    modelo_ann = load_model("datos/modelo_produccion_ANN.h5")
-    modelo_rf = joblib.load("datos/modelo_random_forest.pkl")
+    modelo_ann = load_model("datos/modelos/modelo_produccion_ANN.h5")
+    modelo_rf = joblib.load("datos/modelos/modelo_random_forest.pkl")
     modelo_xgb = XGBRegressor()
-    modelo_xgb.load_model("datos/modelo_xgboost.json")
+    modelo_xgb.load_model("datos/modelos/modelo_xgboost.json")
     return modelo_ann, modelo_rf, modelo_xgb
 
 @st.cache_resource
