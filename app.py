@@ -268,12 +268,15 @@ def generar_pdf_resultados(mae_vals, mse_vals, r2_vals, modelos, mejor_modelo, t
 
 def generar_pdf_prediccion_individual(datos_entrada, modelo_sel, prediccion, otras_predicciones):
     horas_por_dia = 8
-    dias = int(np.ceil(prediccion / horas_por_dia))
+    cantidad = datos_entrada.get('Units Produced', 1)
+    tiempo_total = prediccion * cantidad
+    dias = int(np.ceil(tiempo_total / horas_por_dia))
+
     hoy = datetime.datetime.now()
     fecha_recojo = hoy + datetime.timedelta(days=dias-1 if dias > 0 else 0)
     fecha_recojo_str = fecha_recojo.strftime('%Y-%m-%d')
 
-    if prediccion <= horas_por_dia:
+    if tiempo_total <= horas_por_dia:
         recojo_msg = (
             "✅ Su producto estará listo **el mismo día**. "
             "Por favor, acérquese al finalizar la jornada laboral."
@@ -284,6 +287,14 @@ def generar_pdf_prediccion_individual(datos_entrada, modelo_sel, prediccion, otr
             f"(considerando 8 horas de trabajo por día).\n"
             f"**Fecha estimada de recojo:** {fecha_recojo_str}"
         )
+
+    # Traducción del tipo de producto
+    tipo_producto_es = "Automotriz" if datos_entrada.get('Product Type_Automotive') else \
+                       "Electrónica" if datos_entrada.get('Product Type_Electronics') else \
+                       "Muebles" if datos_entrada.get('Product Type_Furniture') else \
+                       "Textiles"
+
+    volumen = datos_entrada.get('Production Volume Cubic Meters', '-')
 
     pdf_path = "reporte/reporte_prediccion_individual.pdf"
     pdf = FPDF()
@@ -298,14 +309,27 @@ def generar_pdf_prediccion_individual(datos_entrada, modelo_sel, prediccion, otr
     pdf.cell(0, 10, f"Fecha y hora de generación: {hoy.strftime('%Y-%m-%d %H:%M:%S')}", ln=1, align="C")
     pdf.ln(8)
 
-    # Datos de entrada en tabla
+    # Datos de entrada relevantes
     pdf.set_font("Arial", "B", 13)
     pdf.cell(0, 10, "Datos Ingresados:", ln=1)
     pdf.set_font("Arial", "", 11)
     pdf.set_fill_color(240, 240, 240)
-    for columna, valor in datos_entrada.items():
-        pdf.cell(60, 8, limpiar_texto(str(columna)), 1, 0, 'L', 1)
-        pdf.cell(60, 8, limpiar_texto(str(valor)), 1, 1, 'L', 0)
+
+    pdf.cell(60, 8, "Tipo de Producto", 1, 0, 'L', 1)
+    pdf.cell(60, 8, tipo_producto_es, 1, 1, 'L', 0)
+
+    pdf.cell(60, 8, "Volumen (m³)", 1, 0, 'L', 1)
+    pdf.cell(60, 8, str(volumen), 1, 1, 'L', 0)
+
+    pdf.cell(60, 8, "Cantidad a Fabricar", 1, 0, 'L', 1)
+    pdf.cell(60, 8, str(cantidad), 1, 1, 'L', 0)
+
+    pdf.cell(60, 8, "Tiempo por Unidad (h)", 1, 0, 'L', 1)
+    pdf.cell(60, 8, f"{prediccion:.2f}", 1, 1, 'L', 0)
+
+    pdf.cell(60, 8, "Tiempo Total Estimado (h)", 1, 0, 'L', 1)
+    pdf.cell(60, 8, f"{tiempo_total:.2f}", 1, 1, 'L', 0)
+
     pdf.ln(5)
 
     # Predicción principal
@@ -314,8 +338,8 @@ def generar_pdf_prediccion_individual(datos_entrada, modelo_sel, prediccion, otr
     pdf.cell(0, 10, f"Predicción de Tiempo de Producción:", ln=1)
     pdf.set_text_color(0, 0, 0)
     pdf.set_font("Arial", "", 12)
-    pdf.multi_cell(0, 8, f"Modelo seleccionado: **{modelo_sel}**\n"
-                          f"Tiempo estimado: **{prediccion:.2f} horas**")
+    pdf.multi_cell(0, 8, f"Modelo seleccionado: {modelo_sel}\n"
+                         f"Tiempo estimado por unidad: {prediccion:.2f} horas")
     pdf.ln(3)
 
     # Otras predicciones
@@ -323,7 +347,7 @@ def generar_pdf_prediccion_individual(datos_entrada, modelo_sel, prediccion, otr
     pdf.cell(0, 8, "Comparación con otros modelos:", ln=1)
     pdf.set_font("Arial", "", 11)
     for modelo, valor in otras_predicciones.items():
-        pdf.cell(0, 8, f"{modelo}: {valor:.2f} horas", ln=1)
+        pdf.cell(0, 8, f"{modelo}: {valor:.2f} horas por unidad", ln=1)
     pdf.ln(5)
 
     # Recomendación de recojo
@@ -395,16 +419,20 @@ with tab1:
 
         # ==== 1. Gráficos Real vs Predicho ====
         st.markdown("### 📈 Modelos:")
-        for nombre, pred in zip(modelos, preds):
-            fig, ax = plt.subplots(figsize=(6, 6))
-            ax.scatter(y, pred, alpha=0.6, color='teal' if nombre == "ANN" else 'orange' if nombre == "Random Forest" else 'darkorange')
+
+        cols = st.columns(3)  # Tres columnas para mostrar gráficos lado a lado
+        for i, (nombre, pred) in enumerate(zip(modelos, preds)):
+            fig, ax = plt.subplots(figsize=(5, 5))
+            ax.scatter(y, pred, alpha=0.6,
+                    color='teal' if nombre == "ANN" else 'orange' if nombre == "Random Forest" else 'darkorange')
             ax.plot([min(y), max(y)], [min(y), max(y)], 'r--')
             ax.set_xlabel("Valores reales")
             ax.set_ylabel("Predicciones")
             ax.set_title(f"{nombre}: Predicción vs Real")
             ax.grid(True)
-            st.pyplot(fig)
+            cols[i].pyplot(fig)  # Muestra el gráfico en su respectiva columna
             guardar_grafico_pred_vs_real(y, pred, nombre, f"img/pred_vs_real_{nombre}.png")
+
 
         # ==== 2. Métricas de Evaluación ====
         st.markdown("### 🧮 Medidas de Evaluación (MAE, MSE, R²)")
@@ -462,65 +490,70 @@ with tab2:
     st.subheader("🧾 Predicción Individual")
 
     with st.form("pred_form"):
-        col1, col2 = st.columns(2)
+        st.markdown("🔢 Ingresa el volumen del producto y el tipo de producto para estimar el tiempo de producción por unidad. Puedes ingresar la cantidad deseada para calcular el total.")
 
-        with col1:
-            machine_id = st.number_input("ID Máquina", value=1)
-            units = st.number_input("Unidades Producidas", value=100)
-            defects = st.number_input("Defectos", value=0)
-            labour_cost = st.number_input("Costo Laboral x Hora", value=12.0)
-            energy = st.number_input("Consumo Energía (kWh)", value=200.0)
-            operator_count = st.number_input("Operarios", value=3)
+        col_input = st.columns(3)
+        with col_input[0]:
+            volume = st.number_input("Volumen (m³)", value=1.2, min_value=0.01)
+        with col_input[1]:
+            product_type_es = st.radio("Tipo de Producto", ["Automotriz", "Electrónica", "Muebles", "Textiles"], horizontal=True)
+        with col_input[2]:
+            cantidad = st.number_input("Cantidad a fabricar", min_value=1, value=1)
 
-        with col2:
-            maintenance = st.number_input("Horas Mantenimiento", value=0.5)
-            downtime = st.number_input("Horas Inactividad", value=1.0)
-            volume = st.number_input("Volumen (m³)", value=1.2)
-            scrap = st.number_input("Tasa Desechos", value=0.01)
-            rework = st.number_input("Horas Retrabajo", value=0.5)
-            qc_failed = st.number_input("Inspecciones Fallidas", value=0)
-            temperature = st.number_input("Temp. Promedio (°C)", value=25.0)
-            humidity = st.number_input("Humedad (%)", value=60.0)
-
-        product_type = st.radio("Tipo de Producto", ["Automotive", "Electronics", "Furniture", "Textiles"], horizontal=True)
-        shift = st.radio("Turno", ["Day", "Night", "Swing"], horizontal=True)
-
-        modelo_sel = st.selectbox("Selecciona el modelo para predecir:", ["ANN", "Random Forest", "XGBoost"])
+        modelo_sel = st.selectbox(
+            "Selecciona el modelo para predecir:",
+            ["ANN", "Random Forest", "XGBoost"],
+            index=1  # Random Forest por defecto
+        )
 
         submit = st.form_submit_button("Predecir")
 
     if submit:
+        # Mapeo de español a los valores requeridos por el modelo
+        mapa_tipo_producto = {
+            "Automotriz": "Automotive",
+            "Electrónica": "Electronics",
+            "Muebles": "Furniture",
+            "Textiles": "Textiles"
+        }
+        product_type = mapa_tipo_producto[product_type_es]
+
         tipo_producto = {
             'Product Type_Automotive': 1 if product_type == "Automotive" else 0,
             'Product Type_Electronics': 1 if product_type == "Electronics" else 0,
             'Product Type_Furniture': 1 if product_type == "Furniture" else 0,
             'Product Type_Textiles': 1 if product_type == "Textiles" else 0
         }
+
         turno = {
-            'Shift_Night': 1 if shift == "Night" else 0,
-            'Shift_Swing': 1 if shift == "Swing" else 0
+            'Shift_Night': 0,
+            'Shift_Swing': 0
         }
 
         entrada = pd.DataFrame([{
-            'Machine ID': machine_id,
-            'Units Produced': units,
-            'Defects': defects,
-            'Labour Cost Per Hour': labour_cost,
-            'Energy Consumption kWh': energy,
-            'Operator Count': operator_count,
-            'Maintenance Hours': maintenance,
-            'Down time Hours': downtime,
+            'Machine ID': 1,
+            'Units Produced': 1,
+            'Defects': 0,
+            'Labour Cost Per Hour': 12.0,
+            'Energy Consumption kWh': 200.0,
+            'Operator Count': 3,
+            'Maintenance Hours': 0.5,
+            'Down time Hours': 1.0,
             'Production Volume Cubic Meters': volume,
-            'Scrap Rate': scrap,
-            'Rework Hours': rework,
-            'Quality Checks Failed': qc_failed,
-            'Average Temperature C': temperature,
-            'Average Humidity Percent': humidity,
+            'Scrap Rate': 0.01,
+            'Rework Hours': 0.5,
+            'Quality Checks Failed': 0,
+            'Average Temperature C': 25.0,
+            'Average Humidity Percent': 60.0,
             **tipo_producto,
             **turno
         }])
 
-        entrada_scaled = scaler.transform(entrada)
+        try:
+            entrada_scaled = scaler.transform(entrada)
+        except Exception as e:
+            st.error(f"❌ Error al escalar los datos: {e}")
+            st.stop()
 
         predicciones = {
             "ANN": modelo_ann.predict(entrada_scaled)[0][0],
@@ -528,26 +561,41 @@ with tab2:
             "XGBoost": modelo_xgb.predict(entrada_scaled)[0]
         }
 
-        st.metric(modelo_sel, f"{predicciones[modelo_sel]:.2f} horas")
+        tiempo_total = predicciones[modelo_sel] * cantidad
 
-        st.write("Predicción de los otros modelos:")
+        st.metric(f"{modelo_sel} - Total Estimado", f"{tiempo_total:.2f} horas")
+
+        st.markdown("#### 📊 Otras predicciones por unidad:")
         for nombre, valor in predicciones.items():
             if nombre != modelo_sel:
-                st.write(f"{nombre}: **{valor:.2f} horas**")
+                st.markdown(f"- **{nombre}**: {valor:.2f} horas (x{cantidad} = {valor * cantidad:.2f} horas)")
 
+        # Gráfico de comparación
         fig, ax = plt.subplots()
-        ax.bar(["ANN", "Random Forest", "XGBoost"], [predicciones["ANN"], predicciones["Random Forest"], predicciones["XGBoost"]], color=["skyblue", "lightgreen", "orange"])
+        model_names = ["ANN", "Random Forest", "XGBoost"]
+        values = [predicciones[m] * cantidad for m in model_names]
+        bars = ax.bar(model_names, values, color=["skyblue", "lightgreen", "orange"])
         ax.set_ylabel("Horas estimadas")
+        ax.set_title("Comparación de modelos (total)")
+
+        for bar in bars:
+            height = bar.get_height()
+            ax.annotate(f'{height:.2f}', xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3), textcoords="offset points", ha='center', va='bottom')
+
         st.pyplot(fig)
 
-        # --- PDF de reporte individual ---
-        if predicciones:
-            datos_entrada_dict = entrada.iloc[0].to_dict()
-            otras_predicciones = {k: v for k, v in predicciones.items() if k != modelo_sel}
-            pdf_path = generar_pdf_prediccion_individual(datos_entrada_dict, modelo_sel, predicciones[modelo_sel], otras_predicciones)
+        # Generar PDF
+        datos_entrada_dict = entrada.iloc[0].to_dict()
+        otras_predicciones = {k: v for k, v in predicciones.items() if k != modelo_sel}
+        pdf_path = generar_pdf_prediccion_individual(datos_entrada_dict, modelo_sel, predicciones[modelo_sel], otras_predicciones)
 
-            if os.path.exists(pdf_path):
-                with open(pdf_path, "rb") as f:
-                    st.download_button("📥 Descargar Reporte PDF Individual", f, file_name="reporte_prediccion_individual.pdf", mime="application/pdf")
-            else:
-                st.error("❌ No se pudo generar el reporte PDF.")
+        if os.path.exists(pdf_path):
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            file_name = f"reporte_{modelo_sel.lower()}_{timestamp}.pdf"
+
+            with open(pdf_path, "rb") as f:
+                st.download_button("📥 Descargar Reporte PDF Individual", f, file_name=file_name, mime="application/pdf")
+        else:
+            st.error("❌ No se pudo generar el reporte PDF.")

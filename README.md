@@ -81,13 +81,21 @@ streamlit run app.py
 
 ## 📊 Resultados
 
-### Comparación de Modelos
+### Comparación de Modelos (sin U de Theil)
 
-| Modelo        | MAE   | MSE    | R²     | U de Theil | Tiempo (s) |
-| ------------- | ----- | ------ | ------ | ---------- | ---------- |
-| ANN           | 5.625 | 44.995 | -0.052 | 0.2601     | 13.95      |
-| Random Forest | 5.561 | 43.346 | -0.013 | 0.2496     | 2.14       |
-| XGBoost       | 5.761 | 47.924 | -0.120 | 0.2610     | 0.20       |
+| Modelo        | MAE   | MSE    | R²     | Tiempo (s) |
+| ------------- | ----- | ------ | ------ | ---------- |
+| ANN           | 5.625 | 44.995 | -0.052 | 13.95      |
+| Random Forest | 5.561 | 43.346 | -0.013 | 2.14       |
+| XGBoost       | 5.761 | 47.924 | -0.120 | 0.20       |
+
+### Coeficiente U de Theil
+
+| Modelo        | U de Theil |
+| ------------- | -----------|
+| ANN           | 0.2601     |
+| Random Forest | 0.2496     |
+| XGBoost       | 0.2610     |
 
 ### Prueba de Diebold-Mariano
 
