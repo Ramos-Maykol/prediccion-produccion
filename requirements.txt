@@ -8,3 +8,5 @@ fpdf
 xgboost
 tensorflow
 joblib
+statsmodels
+scipy
