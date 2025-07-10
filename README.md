@@ -69,17 +69,15 @@ La segunda parte consiste en el desarrollo de una aplicación web interactiva ut
 ### Requerimientos
 
 ```bash
-pip install streamlit pandas numpy joblib tensorflow xgboost scikit-learn matplotlib seaborn statsmodels scipy fpdf
-# Proyecto de Predicción de Tiempo de Producción
-
-## 📆 Ejecución
-3. Ejecuta la aplicación con:
+pip install -r requirements.txt
+```
+### 📆 Ejecución
 
 ```bash
 streamlit run app.py
 ```
 
----
+
 
 ## 📊 Resultados
 
