@@ -482,7 +482,7 @@ st.markdown("---")
 @st.cache_resource(show_spinner=get_text("spinner_loading_models"))
 def cargar_modelos():
     try:
-        modelo_ann = load_model("datos/modelos/modelo_produccion_ANN.keras")
+        modelo_ann = load_model("datos/modelos/modelo_produccion_ANN.h5")
         modelo_rf = joblib.load("datos/modelos/modelo_random_forest.pkl")
         modelo_xgb = XGBRegressor()
         modelo_xgb.load_model("datos/modelos/modelo_xgboost.json")
