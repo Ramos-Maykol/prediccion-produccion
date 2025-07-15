@@ -9,5 +9,5 @@ xgboost==1.7.6
 joblib==1.2.0
 statsmodels==0.13.5
 scipy==1.10.1
-tensorflow==2.15.0
+tensorflow==2.10.0
 streamlit-modal==0.1.0
