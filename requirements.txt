@@ -9,6 +9,6 @@ xgboost
 joblib
 statsmodels
 scipy
-tensorflow==2.10.0
-googletrans==4.0.0rc1 # Esta es la versión común para googletrans
-streamlit-modal==0.0.9 # O la versión que estés usando
+tensorflow
+googletrans
+streamlit-modal
