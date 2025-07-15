@@ -9,6 +9,5 @@ xgboost
 joblib
 statsmodels
 scipy
-tensorflow
+tensorflow==2.15.0  # Compatible con Python 3.10
 googletrans
-streamlit-modal
