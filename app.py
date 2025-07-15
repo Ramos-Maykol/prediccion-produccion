@@ -13,6 +13,8 @@ import datetime
 from scipy.stats import t
 import re
 from streamlit_modal import Modal
+import sys
+st.write(f"Python version: {sys.version}")
 
 # --- Importar las traducciones desde el archivo translations.py ---
 from translations import TRANSLATIONS
