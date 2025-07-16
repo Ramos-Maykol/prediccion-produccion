@@ -417,7 +417,10 @@ st.sidebar.title(get_text("sidebar_config_title"))
 st.sidebar.header(get_text("sidebar_lang_header"))
 lang_options_display = {
     "Español 🇪🇸": 'es',
-    "English 🇬🇧": 'en'
+    "English 🇬🇧": 'en',
+    "Français 🇫🇷": 'fr',   # French
+    "Deutsch 🇩🇪": 'de',     # German
+    "Português 🇵🇹": 'pt'    # Portuguese
 }
 selected_lang_key = st.sidebar.radio(
     "",
