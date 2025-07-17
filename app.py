@@ -27,7 +27,11 @@ def get_text(key, **kwargs):
     """
     lang = st.session_state.language
     text = TRANSLATIONS.get(key, {}).get(lang, f"MISSING_TRANSLATION_{key}")
-    return text.format(**kwargs) if kwargs else text
+
+    if isinstance(text, str) and kwargs:
+        return text.format(**kwargs)
+    return text
+
 
 # --- Crear carpetas si no existen ---
 os.makedirs("img", exist_ok=True)
@@ -716,9 +720,10 @@ with tab2:
             'Quality Checks Failed': 0,
             'Average Temperature C': 25.0,
             'Average Humidity Percent': 60.0,
+            **tipo_producto_cols,
             'Shift_Night': 0,
-            'Shift_Swing': 0,
-            **tipo_producto_cols
+            'Shift_Swing': 0
+            
         }
         entrada = pd.DataFrame([entrada_dict])
 
